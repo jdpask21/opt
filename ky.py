@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 SEQ_LENGTH = 80   ###訓練データのシーケンスの数
-BATCH_SIZE = 10   ###バッチサイズ
+BATCH_SIZE = 100  ###バッチサイズ
 epochs = 1000
-learning_rate = 1e-3
+learning_rate = 1e-5
 
 # テンソルの横方向の長さ
 tensor_size = 4
@@ -23,7 +23,7 @@ output_size = tensor_size
 
 
 
-csv_file = open("./data_bit.csv", "r", encoding="ms932", errors="", newline="" )
+csv_file = open("./data_bit_1y.csv", "r", encoding="ms932", errors="", newline="" )
 #リスト形式
 f = csv.reader(csv_file, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
 
@@ -138,17 +138,18 @@ class LSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, tensor_size)
+        #self.leaky_relu = nn.functional.leaky_relu()
         self.sigmoid = nn.Sigmoid()
     def forward(self, x):
         # y_rnnは(batch_size, seq_length, hidden_size)となる
         y_rnn, (h,c) = self.rnn(x, None)
         # yにはy_rnnのseq_length方向の最後の値を入れる
         y = self.fc(y_rnn[:, -1, :])
-        y = self.sigmoid(y)
+        y = nn.functional.leaky_relu(y)
         y = self.fc2(y)
-        y = self.sigmoid(y)
+        y = nn.functional.leaky_relu(y)
         y = self.fc3(y)
-        y = self.sigmoid(y)
+        y = nn.functional.leaky_relu(y)
         #y = self.fc2(y)
         #y = self.fc3(y)
         return y
